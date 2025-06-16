@@ -1,8 +1,5 @@
-from selenium import webdriver as wd
+from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 import time
 import requests
@@ -15,11 +12,7 @@ def get_chrome_driver():
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920x1080')
-    chrome_options.add_argument('--disable-extensions')
-    chrome_options.add_argument('--disable-infobars')
-    chrome_options.add_argument('--disable-browser-side-navigation')
-    chrome_options.add_argument('--disable-features=VizDisplayCompositor')
-    driver = wd.Chrome(options=chrome_options)
+    driver = webdriver.Chrome(options=chrome_options)  # Selenium 4.6.0+에서는 경로 필요 없음
     return driver
 
 def scroll_page(driver):
