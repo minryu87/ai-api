@@ -1,64 +1,102 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-import time
-import requests
-import re
+import os
+from googleapiclient.discovery import build
 
-def get_chrome_driver():
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
-    chrome_options.add_argument('--disable-gpu')
-    chrome_options.add_argument('--window-size=1920x1080')
-    driver = webdriver.Chrome(options=chrome_options)  # Selenium 4.6.0+에서는 경로 필요 없음
-    return driver
+def get_youtube_client():
+    api_key = os.environ.get("YOUTUBE_API_KEY")
+    if not api_key:
+        raise Exception("YOUTUBE_API_KEY 환경변수가 설정되어 있지 않습니다.")
+    return build("youtube", "v3", developerKey=api_key)
 
-def scroll_page(driver):
-    last_page_height = driver.execute_script("return document.documentElement.scrollHeight")
-    while True:
-        driver.execute_script("window.scrollTo(0, document.documentElement.scrollHeight);")
-        time.sleep(2.0)
-        new_page_height = driver.execute_script("return document.documentElement.scrollHeight")
-        if new_page_height == last_page_height:
-            break
-        last_page_height = new_page_height
-    return driver
+def get_channel_id_by_custom_name(youtube, custom_name):
+    # 커스텀 채널명(@xxxx)으로 채널ID 조회
+    request = youtube.search().list(
+        q=custom_name,
+        type="channel",
+        part="snippet",
+        maxResults=1
+    )
+    response = request.execute()
+    items = response.get("items", [])
+    if not items:
+        return None
+    return items[0]["snippet"]["channelId"]
 
-def get_url_title_in_html_source(html_source, css_selector):
-    titles, urls = [], []
-    soup = BeautifulSoup(html_source, 'lxml')
-    datas = soup.select(css_selector)
-    for data in datas:
-        title = data.text.replace('\n', '')
-        url = "https://www.youtube.com" + data.get('href')
-        titles.append(title)
-        urls.append(url)
-    return titles, urls
+def search_youtube_videos(youtube, channel_id, max_results=10):
+    request = youtube.search().list(
+        channelId=channel_id,
+        part="snippet",
+        maxResults=max_results,
+        type="video",
+        order="date"
+    )
+    response = request.execute()
+    videos = []
+    for item in response["items"]:
+        video_id = item["id"]["videoId"]
+        title = item["snippet"]["title"]
+        videos.append({"video_id": video_id, "title": title})
+    return videos
 
-def get_channel_video_url_list(channel_url):
-    driver = get_chrome_driver()
-    driver.get(channel_url)
-    driver = scroll_page(driver=driver)
-    html_source = driver.page_source
-    driver.quit()
-    url_title_css_selector = "ytd-grid-video-renderer.style-scope.ytd-grid-renderer > div#dismissible > div#details > div#meta > h3.style-scope.ytd-grid-video-renderer > a#video-title"
-    titles, urls = get_url_title_in_html_source(html_source=html_source, css_selector=url_title_css_selector)
-    return titles, urls
+def get_video_comments(youtube, video_id, max_results=10):
+    comments = []
+    request = youtube.commentThreads().list(
+        part="snippet",
+        videoId=video_id,
+        maxResults=max_results,
+        textFormat="plainText"
+    )
+    response = request.execute()
+    for item in response.get("items", []):
+        snippet = item["snippet"]["topLevelComment"]["snippet"]
+        comments.append({
+            "author": snippet.get("authorDisplayName"),
+            "text": snippet.get("textDisplay"),
+            "publishedAt": snippet.get("publishedAt"),
+            "likeCount": snippet.get("likeCount", 0)
+        })
+    return comments
+
+def get_video_statistics(youtube, video_id):
+    request = youtube.videos().list(
+        part="statistics,snippet",
+        id=video_id
+    )
+    response = request.execute()
+    if not response["items"]:
+        return {}
+    stats = response["items"][0]["statistics"]
+    snippet = response["items"][0]["snippet"]
+    return {
+        "viewCount": int(stats.get("viewCount", 0)),
+        "likeCount": int(stats.get("likeCount", 0)),
+        "commentCount": int(stats.get("commentCount", 0)),
+        "publishedAt": snippet.get("publishedAt"),
+        "title": snippet.get("title"),
+        "description": snippet.get("description")
+    }
 
 def crawl_youtube_channel(channel_name: str):
-    base_url = f"https://www.youtube.com/@{channel_name}"
-    videos_url = f"{base_url}/videos"
-    shorts_url = f"{base_url}/shorts"
-    # 동영상 목록 크롤링
-    titles, urls = get_channel_video_url_list(videos_url)
-    # 결과 예시: 동영상 제목, url만 반환
+    youtube = get_youtube_client()
+    # 채널ID 조회
+    channel_id = get_channel_id_by_custom_name(youtube, channel_name)
+    if not channel_id:
+        return {"error": "채널을 찾을 수 없습니다."}
+    # 동영상 목록 조회
+    videos = search_youtube_videos(youtube, channel_id, max_results=5)
     result = []
-    for title, url in zip(titles, urls):
-        result.append({"title": title, "url": url})
+    for video in videos:
+        video_id = video["video_id"]
+        stats = get_video_statistics(youtube, video_id)
+        comments = get_video_comments(youtube, video_id, max_results=5)
+        result.append({
+            "video_id": video_id,
+            "title": video["title"],
+            "statistics": stats,
+            "comments": comments
+        })
     return {
         "channel": channel_name,
+        "channel_id": channel_id,
         "videos": result,
         "videos_count": len(result)
     }
