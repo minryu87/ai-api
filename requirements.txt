@@ -4,3 +4,4 @@ selenium>=4.6.0
 beautifulsoup4
 pandas
 requests
+lxml

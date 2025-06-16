@@ -1,6 +1,6 @@
 FROM python:3.10-slim
 
-# 크롬 설치
+# 크롬 및 lxml 빌드에 필요한 패키지 설치
 RUN apt-get update && apt-get install -y \
     wget \
     unzip \
@@ -23,6 +23,9 @@ RUN apt-get update && apt-get install -y \
     fonts-liberation \
     libappindicator3-1 \
     xdg-utils \
+    build-essential \
+    libxml2-dev \
+    libxslt1-dev \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
