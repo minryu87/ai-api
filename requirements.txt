@@ -1,2 +1,6 @@
 fastapi
 uvicorn
+selenium
+beautifulsoup4
+pandas
+requests

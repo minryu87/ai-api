@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import site_a, site_b, task_c, sample, health
+from app.api import site_a, site_b, task_c, sample, health, youtube
 
 app = FastAPI()
 
@@ -8,3 +8,4 @@ app.include_router(site_b.router, prefix="/site-b")
 app.include_router(task_c.router, prefix="/task-c")
 app.include_router(sample.router, prefix="/sample")
 app.include_router(health.router)
+app.include_router(youtube.router, prefix="/youtube")
