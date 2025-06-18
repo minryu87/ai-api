@@ -18,7 +18,7 @@ table_reply = base.table(settings.AIRTABLE_CAFE_THREAD_REPLY_TABLE_NAME)
 table_relevance = base.table(settings.AIRTABLE_CAFE_THREAD_RELEVANCE_TABLE_NAME)
 
 
-async def get_thread_id_from_record(record_id: str, table_name: str) -> str:
+def get_thread_id_from_record(record_id: str, table_name: str) -> str:
     """
     어떤 테이블의 레코드 ID가 주어졌을 때, 최상위 threadId를 찾아서 반환합니다.
     """
@@ -42,7 +42,7 @@ async def get_thread_id_from_record(record_id: str, table_name: str) -> str:
     raise ValueError("Could not determine threadId from the provided record")
 
 
-async def process_and_save_thread_data(thread_id: str):
+def process_and_save_thread_data(thread_id: str):
     """
     주어진 thread_id를 기반으로 데이터를 통합하고 최종 테이블에 저장/업데이트합니다.
     """
