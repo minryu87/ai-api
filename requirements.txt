@@ -6,3 +6,6 @@ pandas
 requests
 lxml
 google-api-python-client
+pyairtable
+python-dotenv
+pydantic-settings

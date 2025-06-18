@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import site_a, site_b, task_c, sample, health, youtube, youtube_videos, youtube_comments
+from app.api import site_a, site_b, task_c, sample, health, youtube, youtube_videos, youtube_comments, airtable
 
 app = FastAPI()
 
@@ -11,3 +11,5 @@ app.include_router(health.router)
 
 app.include_router(youtube_videos.router, prefix="/youtube")
 app.include_router(youtube_comments.router, prefix="/youtube")
+
+app.include_router(airtable.router, prefix="/api/v1/airtable", tags=["Airtable"])
