@@ -56,6 +56,8 @@ def process_and_save_thread_data(thread_id: str):
 
     thread_fields = thread_record.get('fields', {})
     thread_text = thread_fields.get('글 내용', '')
+    thread_author = thread_fields.get('작성자 닉네임', '')
+    thread_published_at = thread_fields.get('작성 시점', '')
 
     # 2. 댓글 및 대댓글 데이터 가져오기 및 구조화
     comments_data = table_comment.all(formula=f"{{threadId}} = '{thread_id}'")
@@ -66,15 +68,23 @@ def process_and_save_thread_data(thread_id: str):
         comment_id = comm_fields.get('threadCommentId')
         
         replies_data = table_reply.all(formula=f"{{threadCommentId}} = '{comment_id}'")
-        replies_list = [Reply(replyText=rep.get('fields', {}).get('대댓글 내용', '')) for rep in replies_data]
+        replies_list = [Reply(
+            author=rep.get('fields', {}).get('작성자 닉네임', ''),
+            publishedAt=rep.get('fields', {}).get('작성 시점', ''),
+            replyText=rep.get('fields', {}).get('대댓글 내용', '')
+        ) for rep in replies_data]
 
         comments_list.append(Comment(
+            author=comm_fields.get('작성자 닉네임', ''),
+            publishedAt=comm_fields.get('작성 시점', ''),
             commentText=comm_fields.get('댓글 내용', ''),
             replies=replies_list
         ))
 
     # 3. integratedText JSON 구조 생성
     integrated_text_obj = IntegratedText(
+        author=thread_author,
+        publishedAt=thread_published_at,
         threadText=thread_text,
         comments=comments_list
     )
