@@ -2,13 +2,19 @@ from pydantic import BaseModel
 from typing import List, Optional
 
 class Reply(BaseModel):
+    author: Optional[str] = None
+    publishedAt: Optional[str] = None
     replyText: str
 
 class Comment(BaseModel):
+    author: Optional[str] = None
+    publishedAt: Optional[str] = None
     commentText: str
     replies: List[Reply] = []
 
 class IntegratedText(BaseModel):
+    author: Optional[str] = None
+    publishedAt: Optional[str] = None
     threadText: str
     comments: List[Comment] = []
 

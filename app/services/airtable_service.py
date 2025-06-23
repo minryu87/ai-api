@@ -55,7 +55,6 @@ def process_and_save_thread_data(thread_id: str):
         raise ValueError(f"Thread not found: {thread_id}")
 
     thread_fields = thread_record.get('fields', {})
-    logger.info(f"[DEBUG] Raw Thread Fields for {thread_id}: {thread_fields}")
     thread_text = thread_fields.get('글 내용', '')
     thread_author = thread_fields.get('작성자 닉네임', '')
     thread_published_at = thread_fields.get('작성 시점', '')
@@ -66,15 +65,10 @@ def process_and_save_thread_data(thread_id: str):
     comments_list = []
     for comm_record in comments_data:
         comm_fields = comm_record.get('fields', {})
-        logger.info(f"[DEBUG] Raw Comment Fields: {comm_fields}")
         comment_id = comm_fields.get('threadCommentId')
         
         replies_data = table_reply.all(formula=f"{{threadCommentId}} = '{comment_id}'")
         
-        # 디버깅을 위해 reply 데이터도 로그로 남깁니다.
-        for rep in replies_data:
-            logger.info(f"[DEBUG] Raw Reply Fields: {rep.get('fields', {})}")
-
         replies_list = [Reply(
             author=rep.get('fields', {}).get('작성자 닉네임', ''),
             publishedAt=rep.get('fields', {}).get('작성 시점', ''),
