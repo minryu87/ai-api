@@ -100,7 +100,6 @@ def process_and_save_thread_data(thread_id: str):
         'postedAt': thread_fields.get('작성 시점'),
         'link': thread_fields.get('링크'),
         'integratedText': integrated_text_obj.model_dump_json(indent=2),
-        'Relevance': thread_fields.get('Relevance'), # 필요 시 다른 값으로 설정
     }
 
     # 5. 최종 테이블에 저장 또는 업데이트
@@ -127,7 +126,6 @@ def process_and_save_thread_data(thread_id: str):
         'postedAt': thread_fields.get('작성 시점'),
         'link': thread_fields.get('링크'),
         'integratedText': integrated_text_obj, # Pydantic 객체를 그대로 사용
-        'Relevance': thread_fields.get('Relevance'),
         'createdAt': table_relevance.get(record_id).get('fields', {}).get('createdAt')
     }
     return data_to_return 

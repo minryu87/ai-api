@@ -37,5 +37,4 @@ class FinalOutput(BaseModel):
     postedAt: Optional[str] = None
     link: Optional[str] = None
     integratedText: IntegratedText
-    relevance: Optional[str] = None
     createdAt: Optional[str] = None 
