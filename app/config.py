@@ -16,4 +16,13 @@ class Settings(BaseSettings):
     AIRTABLE_CAFE_THREAD_REPLY_TABLE_NAME: str = os.environ.get("AIRTABLE_CAFE_THREAD_REPLY_TABLE_NAME", "cafeThreadReply")
     AIRTABLE_CAFE_THREAD_RELEVANCE_TABLE_NAME: str = os.environ.get("AIRTABLE_CAFE_THREAD_RELEVANCE_TABLE_NAME", "cafeThreadRelevance")
 
+    # Naver Creator Advisor
+    NAVER_ADVISOR_COOKIE: str = os.environ.get("NAVER_ADVISOR_COOKIE")
+    BLOG_AIRTABLE_API_KEY: str = os.environ.get("BLOG_AIRTABLE_API_KEY")
+    BLOG_AIRTABLE_BASE_ID: str = os.environ.get("BLOG_AIRTABLE_BASE_ID")
+    AIRTABLE_NAVER_KEYWORD_RANK_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_KEYWORD_RANK_TABLE_NAME", "referer-query-rank-searchQuery")
+    AIRTABLE_NAVER_KEYWORD_TREND_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_KEYWORD_TREND_TABLE_NAME", "inflow-search-trend")
+    AIRTABLE_NAVER_POPULAR_CONTENTS_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_POPULAR_CONTENTS_TABLE_NAME", "popular-contents")
+
+
 settings = Settings()

@@ -134,6 +134,19 @@
   }
   ```
 
+### 7. 네이버 Creator Advisor 데이터 동기화
+- **이름:** Naver Creator Advisor Data Sync
+- **주소:** `/api/v1/creator-advisor/sync-creator-advisor`
+- **메서드:** POST
+- **설명:** 네이버 Creator Advisor의 4개 API에서 데이터를 가져와 Airtable에 동기화하는 작업을 백그라운드에서 실행합니다.
+- **Input (Body):** 없음
+- **Output (Success):**
+  ```json
+  {
+    "message": "Creator Advisor 데이터 동기화 작업이 백그라운드에서 시작되었습니다."
+  }
+  ```
+
 ---
 
 > 앞으로 API가 추가될 때마다 위와 같은 형식으로 정보를 정리해 주세요.
