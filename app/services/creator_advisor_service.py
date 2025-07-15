@@ -1,7 +1,7 @@
 import requests
 import logging
 from datetime import datetime
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 
 import pandas as pd
 from pyairtable import Api
@@ -92,12 +92,21 @@ def _fetch_referer_query_rank():
     logger.info(f"총 {len(all_keywords)}개의 유니크 키워드를 수집했습니다.")
     return list(all_keywords)
 
+# Referer URL 생성 함수 (한글 keyword 인코딩)
+def _make_referer_url(keyword: str) -> str:
+    keyword_encoded = quote(keyword)
+    return (
+        f"https://creator-advisor.naver.com/new-windows/query-stats?"
+        f"channelId={CHANNEL_ID}&contentType=text&endDate={END_DATE}&interval=month&metric=cv&query={keyword_encoded}&service={SERVICE}&startDate={START_DATE}"
+    )
+
 def _fetch_trend_and_competitiveness(keywords: list):
     """2 & 3. 키워드별 트렌드 및 경쟁력을 가져옵니다."""
     logger.info("2 & 3. 키워드별 트렌드 및 경쟁력 수집 시작...")
     records_to_create = []
     
-    for keyword in keywords:
+    for idx, keyword in enumerate(keywords):
+        logger.info(f"[트렌드/경쟁력] ({idx+1}/{len(keywords)}) '{keyword}' 처리 시작...")
         # 2. Inflow Search Trend
         trend_params = {
             "channelId": CHANNEL_ID,
@@ -108,8 +117,11 @@ def _fetch_trend_and_competitiveness(keywords: list):
             "startDate": START_DATE
         }
         trend_url = f"https://creator-advisor.naver.com/api/v6/inflow-analysis/inflow-search-trend?{urlencode(trend_params)}"
-        trend_headers = _get_headers(f"https://creator-advisor.naver.com/new-windows/query-stats?channelId={CHANNEL_ID}&endDate={END_DATE}&keyword={keyword}&service={SERVICE}&startDate={START_DATE}")
+        trend_headers = _get_headers(_make_referer_url(keyword))
         trend_data = _make_api_request(trend_url, trend_headers)
+        if not trend_data or not trend_data.get("data"):
+            logger.warning(f"[트렌드] '{keyword}' 응답 없음 또는 데이터 없음. URL: {trend_url}")
+            continue
 
         # 3. Query Competitiveness
         comp_params = {
@@ -125,33 +137,37 @@ def _fetch_trend_and_competitiveness(keywords: list):
         comp_url = f"https://creator-advisor.naver.com/api/v6/inflow-analysis/query-competitiveness?{urlencode(comp_params)}"
         comp_headers = trend_headers # Referer가 동일하므로 재사용
         comp_data = _make_api_request(comp_url, comp_headers)
+        if not comp_data or not comp_data.get("data"):
+            logger.warning(f"[경쟁력] '{keyword}' 응답 없음 또는 데이터 없음. URL: {comp_url}")
+            continue
 
         # 데이터 통합
-        if trend_data and trend_data.get("data") and comp_data and comp_data.get("data"):
-            merged_data = {}
-            for item in trend_data["data"]:
-                merged_data[item["date"]] = {
-                    "searchInflow": item.get("searchInflow"),
-                    "datalabSearch": item.get("datalabSearch")
-                }
-            for item in comp_data["data"]:
-                if item["date"] in merged_data:
-                    merged_data[item["date"]].update({
-                        "my": item.get("my"),
-                        "totalMean": item.get("totalMean"),
-                        "topMean": item.get("topMean")
-                    })
-            
-            for date, values in merged_data.items():
-                records_to_create.append({
-                    "keyword": keyword,
-                    "date": date,
-                    **values
+        merged_data = {}
+        for item in trend_data["data"]:
+            merged_data[item["date"]] = {
+                "searchInflow": item.get("searchInflow"),
+                "datalabSearch": item.get("datalabSearch")
+            }
+        for item in comp_data["data"]:
+            if item["date"] in merged_data:
+                merged_data[item["date"]].update({
+                    "my": item.get("my"),
+                    "totalMean": item.get("totalMean"),
+                    "topMean": item.get("topMean")
                 })
+        for date, values in merged_data.items():
+            records_to_create.append({
+                "keyword": keyword,
+                "date": date,
+                **values
+            })
+        logger.info(f"[트렌드/경쟁력] '{keyword}' 데이터 {len(merged_data)}건 수집 완료.")
 
     if records_to_create:
         logger.info(f"총 {len(records_to_create)}개의 트렌드/경쟁력 데이터를 Airtable에 저장합니다.")
         table_keyword_trend.batch_create(records_to_create)
+    else:
+        logger.warning("수집된 트렌드/경쟁력 데이터가 없습니다.")
 
 def _fetch_popular_contents(keywords: list):
     """4. 키워드/월별 인기 콘텐츠를 가져옵니다."""
@@ -160,8 +176,10 @@ def _fetch_popular_contents(keywords: list):
 
     dates = pd.date_range(start=START_DATE, end=POPULAR_CONTENTS_END_DATE, freq='MS').strftime('%Y-%m-%d').tolist()
 
-    for keyword in keywords:
+    for idx, keyword in enumerate(keywords):
+        logger.info(f"[인기콘텐츠] ({idx+1}/{len(keywords)}) '{keyword}' 처리 시작...")
         for date in dates:
+            logger.info(f"[인기콘텐츠] '{keyword}' - {date} 수집 시도...")
             params = {
                 "channelId": CHANNEL_ID,
                 "contentType": CONTENT_TYPE,
@@ -173,15 +191,17 @@ def _fetch_popular_contents(keywords: list):
                 "service": SERVICE
             }
             url = f"https://creator-advisor.naver.com/api/v6/inflow-analysis/popular-contents?{urlencode(params)}"
-            headers = _get_headers(f"https://creator-advisor.naver.com/new-windows/query-stats?channelId={CHANNEL_ID}&endDate={END_DATE}&keyword={keyword}&service={SERVICE}&startDate={START_DATE}")
+            headers = _get_headers(_make_referer_url(keyword))
 
             data = _make_api_request(url, headers)
             if not data:
+                logger.warning(f"[인기콘텐츠] '{keyword}' - {date} 응답 없음. URL: {url}")
                 continue
             
             # 'data'와 'myData'를 모두 처리
             all_contents = data.get("data", []) + data.get("myData", [])
-            
+            if not all_contents:
+                logger.info(f"[인기콘텐츠] '{keyword}' - {date} 데이터 없음.")
             for item in all_contents:
                 created_at_ts = item.get("createdAt")
                 # timestamp(ms)를 ISO 8601 형식의 문자열로 변환
@@ -200,10 +220,31 @@ def _fetch_popular_contents(keywords: list):
                     "channelName": item.get("channelName"),
                     "createdAt": created_at_iso
                 })
+            logger.info(f"[인기콘텐츠] '{keyword}' - {date} 데이터 {len(all_contents)}건 수집 완료.")
 
     if records_to_create:
         logger.info(f"총 {len(records_to_create)}개의 인기 콘텐츠 데이터를 Airtable에 저장합니다.")
         table_popular_contents.batch_create(records_to_create)
+    else:
+        logger.warning("수집된 인기 콘텐츠 데이터가 없습니다.")
+
+# --- resume 기능 추가 ---
+def resume_from_keywords():
+    """
+    referer-query-rank-searchQuery 테이블에서 유니크 키워드를 추출하여,
+    2, 3, 4번 단계만 실행합니다.
+    """
+    logger.info("[Resume] referer-query-rank-searchQuery 테이블에서 유니크 키워드 추출 중...")
+    all_records = table_keyword_rank.all()
+    keywords = set()
+    for rec in all_records:
+        keyword = rec.get('fields', {}).get('searchQuery')
+        if keyword:
+            keywords.add(keyword)
+    logger.info(f"[Resume] 총 {len(keywords)}개의 유니크 키워드로 2, 3, 4단계만 실행합니다.")
+    _fetch_trend_and_competitiveness(list(keywords))
+    _fetch_popular_contents(list(keywords))
+    logger.info("[Resume] 2, 3, 4단계 동기화가 완료되었습니다.")
 
 def sync_creator_advisor_data():
     """네이버 Creator Advisor 데이터를 동기화하는 전체 파이프라인입니다."""
