@@ -29,7 +29,7 @@ def get_video_list_api(channel_name: str):
     request = youtube.search().list(
         channelId=channel_id,
         part="snippet",
-        maxResults=10,
+        maxResults=100,
         type="video",
         order="date"
     )
@@ -62,7 +62,7 @@ def get_comment_list_api(channel_name: str):
     request = youtube.search().list(
         channelId=channel_id,
         part="snippet",
-        maxResults=5,
+        maxResults=100,
         type="video",
         order="date"
     )
@@ -74,7 +74,7 @@ def get_comment_list_api(channel_name: str):
         threads_req = youtube.commentThreads().list(
             part="snippet,replies",
             videoId=video_id,
-            maxResults=10
+            maxResults=100
         )
         threads_res = threads_req.execute()
         for thread in threads_res.get("items", []):
@@ -122,7 +122,7 @@ def get_replies_recursive(youtube, parent_id, channel_id, video_id):
     req = youtube.comments().list(
         part="snippet",
         parentId=parent_id,
-        maxResults=10
+        maxResults=100
     )
     res = req.execute()
     for item in res.get("items", []):

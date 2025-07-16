@@ -9,3 +9,6 @@ __pycache__/
 
 # VSCode
 .vscode/ 
+
+# 크롬 디버그 프로필 무시
+chrome_debug_profile/
