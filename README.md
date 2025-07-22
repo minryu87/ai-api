@@ -134,7 +134,39 @@
   }
   ```
 
-### 7. 네이버 Creator Advisor 데이터 동기화
+### 7. PostgreSQL 데이터 수동 재처리
+- **이름:** PostgreSQL Manual Reprocessor
+- **주소:** `/api/v1/postgres/reprocess-from-postgres/{thread_id}`
+- **메서드:** POST
+- **설명:** 특정 `thread_id`에 해당하는 데이터를 **PostgreSQL DB**에서 가져와 통합하고 최종적으로 **Airtable**에 저장합니다. DB 마이그레이션 후 또는 데이터 정합성이 필요할 때 사용합니다.
+- **Input (Path Parameter):**
+  - `thread_id` (string, 필수): 재처리할 스레드의 고유 ID
+- **Output (Success):**
+  ```json
+  {
+    "id": "recXXXXXXXXXXXXXX",
+    "threadId": "NAVER_CAFE_THREAD_4899403",
+    "clientName": "솔동물의료센터",
+    "channel": "NAVERCAFE",
+    "community": "고양이라서 다행이야",
+    "title": "(승인)아메리칸숏헤어 귀염둥이 입양보내요~",
+    "postedAt": "2025-06-17T13:57:00",
+    "link": "https://cafe.naver.com/ilovecat/4899403",
+    "integratedText": {
+      "threadText": "만두와 평생을 함께 할 새 가족을 찾습니다...",
+      "comments": [
+        {
+          "commentText": "★국희는 외동묘나 둘째묘 정도로 생각하고 있습니다...",
+          "replies": [{"replyText": "감사합니다"}]
+        }
+      ]
+    },
+    "relevance": null,
+    "createdAt": "2025-06-18T14:10:00"
+  }
+  ```
+
+### 8. 네이버 Creator Advisor 데이터 동기화
 - **이름:** Naver Creator Advisor Data Sync
 - **주소:** `/api/v1/creator-advisor/sync-creator-advisor`
 - **메서드:** POST
