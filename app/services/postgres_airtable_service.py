@@ -9,9 +9,21 @@ logger = logging.getLogger(__name__)
 
 # --- Database Setup ---
 try:
-    engine = create_engine(settings.DATABASE_URL)
+    engine = create_engine(
+        "postgresql+psycopg2://",
+        connect_args={
+            "host": settings.DB_HOST,
+            "port": settings.DB_PORT,
+            "user": settings.DB_USER,
+            "password": settings.DB_PASSWORD,
+            "dbname": settings.DB_NAME,
+            "sslmode": "require",
+        },
+        pool_pre_ping=True,
+        pool_recycle=3600,
+    )
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    logger.info("Database engine created successfully.")
+    logger.info("Database engine created successfully using connect_args.")
 except Exception as e:
     logger.error(f"Failed to create database engine: {e}", exc_info=True)
     engine = None

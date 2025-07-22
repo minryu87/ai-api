@@ -25,18 +25,6 @@ class Settings(BaseSettings):
     DB_HOST: str = os.environ.get("DB_HOST")
     DB_PORT: int = os.environ.get("DB_PORT")
     DB_NAME: str = os.environ.get("DB_NAME")
-
-    @property
-    def DATABASE_URL(self) -> str:
-        return str(URL.create(
-            drivername="postgresql+psycopg2",
-            username=self.DB_USER,
-            password=self.DB_PASSWORD,
-            host=self.DB_HOST,
-            port=self.DB_PORT,
-            database=self.DB_NAME,
-            query={"sslmode": "require"}  # SSL 연결 강제
-        ))
         
     # Naver Creator Advisor
     NAVER_ADVISOR_COOKIE: str = os.environ.get("NAVER_ADVISOR_COOKIE")
