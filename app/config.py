@@ -6,8 +6,13 @@ import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from sqlalchemy.engine.url import URL
+import logging
 
 load_dotenv()
+
+# 임시 로거 설정
+temp_logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class Settings(BaseSettings):
     # --- Existing Airtable Settings ---
@@ -24,6 +29,18 @@ class Settings(BaseSettings):
     DB_HOST: str = os.environ.get("DB_HOST")
     DB_PORT: int = os.environ.get("DB_PORT")
     DB_NAME: str = os.environ.get("DB_NAME")
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        # --- 임시 로그 출력 ---
+        temp_logger.info("--- Loaded Database Credentials ---")
+        temp_logger.info(f"DB_USER: {self.DB_USER}")
+        temp_logger.info(f"DB_HOST: {self.DB_HOST}")
+        temp_logger.info(f"DB_PORT: {self.DB_PORT}")
+        temp_logger.info(f"DB_NAME: {self.DB_NAME}")
+        temp_logger.info(f"DB_PASSWORD is set: {'Yes' if self.DB_PASSWORD else 'No'}")
+        temp_logger.info("------------------------------------")
+
 
     @property
     def DATABASE_URL(self) -> str:
