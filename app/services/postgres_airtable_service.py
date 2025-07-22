@@ -108,21 +108,36 @@ def get_thread_data_from_postgres(thread_id: str):
         replies_result = db.execute(replies_query, {"thread_id": thread_id}).mappings().all()
 
         replies_map = {}
-        for reply in replies_result:
-            comment_id = reply['threadCommentId']
+        for reply_row in replies_result:
+            reply_data = dict(reply_row)
+            comment_id = reply_data['threadCommentId']
             if comment_id not in replies_map:
                 replies_map[comment_id] = []
-            replies_map[comment_id].append(Reply(**reply))
+            
+            if reply_data.get('publishedAt'):
+                reply_data['publishedAt'] = reply_data['publishedAt'].isoformat()
+            
+            replies_map[comment_id].append(Reply(**reply_data))
 
         comments_list = []
-        for comm in comments_result:
-            comment_id = comm['threadCommentId']
+        for comm_row in comments_result:
+            comm_data = dict(comm_row)
+            comment_id = comm_data['threadCommentId']
+            
+            if comm_data.get('publishedAt'):
+                comm_data['publishedAt'] = comm_data['publishedAt'].isoformat()
+
             comments_list.append(Comment(
-                **comm,
+                **comm_data,
                 replies=replies_map.get(comment_id, [])
             ))
 
-        return thread_record, comments_list
+        # Convert thread_record to mutable dict and fix datetime
+        final_thread_record = dict(thread_record)
+        if final_thread_record.get('publishedAt'):
+            final_thread_record['publishedAt'] = final_thread_record['publishedAt'].isoformat()
+
+        return final_thread_record, comments_list
 
     finally:
         next(db_gen, None)
@@ -151,7 +166,7 @@ def process_and_save_postgres_thread(thread_id: str):
         'channel': thread_record.get('channel'),
         'community': thread_record.get('community'),
         'title': thread_record.get('title'),
-        'postedAt': thread_record.get('publishedAt').isoformat() if thread_record.get('publishedAt') else None,
+        'postedAt': thread_record.get('publishedAt'),
         'link': thread_record.get('link'),
         'integratedText': integrated_text_obj.model_dump_json(indent=2),
     }
