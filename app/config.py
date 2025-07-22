@@ -5,10 +5,12 @@
 import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+from sqlalchemy.engine.url import URL
 
 load_dotenv()
 
 class Settings(BaseSettings):
+    # --- Existing Airtable Settings ---
     AIRTABLE_API_KEY: str = os.environ.get("AIRTABLE_API_KEY")
     AIRTABLE_BASE_ID: str = os.environ.get("AIRTABLE_BASE_ID")
     AIRTABLE_CAFE_THREAD_TABLE_NAME: str = os.environ.get("AIRTABLE_CAFE_THREAD_TABLE_NAME", "cafeThread")
@@ -16,6 +18,24 @@ class Settings(BaseSettings):
     AIRTABLE_CAFE_THREAD_REPLY_TABLE_NAME: str = os.environ.get("AIRTABLE_CAFE_THREAD_REPLY_TABLE_NAME", "cafeThreadReply")
     AIRTABLE_CAFE_THREAD_RELEVANCE_TABLE_NAME: str = os.environ.get("AIRTABLE_CAFE_THREAD_RELEVANCE_TABLE_NAME", "cafeThreadRelevance")
 
+    # --- New PostgreSQL Settings ---
+    DB_USER: str = os.environ.get("DB_USER")
+    DB_PASSWORD: str = os.environ.get("DB_PASSWORD")
+    DB_HOST: str = os.environ.get("DB_HOST")
+    DB_PORT: int = os.environ.get("DB_PORT")
+    DB_NAME: str = os.environ.get("DB_NAME")
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return str(URL.create(
+            drivername="postgresql+psycopg2",
+            username=self.DB_USER,
+            password=self.DB_PASSWORD,
+            host=self.DB_HOST,
+            port=self.DB_PORT,
+            database=self.DB_NAME,
+        ))
+        
     # Naver Creator Advisor
     NAVER_ADVISOR_COOKIE: str = os.environ.get("NAVER_ADVISOR_COOKIE")
     BLOG_AIRTABLE_API_KEY: str = os.environ.get("BLOG_AIRTABLE_API_KEY")
