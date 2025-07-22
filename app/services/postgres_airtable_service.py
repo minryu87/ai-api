@@ -143,6 +143,42 @@ def get_thread_data_from_postgres(thread_id: str):
         next(db_gen, None)
 
 
+def get_thread_id_from_any_record(record_id: str) -> str | None:
+    """
+    Finds the master thread_id by analyzing the record_id string.
+    e.g., 'REPLY_123', 'COMMENT_456', 'THREAD_789'
+    """
+    db_gen = get_db()
+    db = next(db_gen)
+
+    try:
+        if "REPLY" in record_id:
+            table_name = 'thread_reply'
+            query = text("""
+                SELECT tc.thread_id
+                FROM thread_comment tc
+                JOIN thread_reply tr ON tc.id = tr.thread_comment_id
+                WHERE tr.id = :record_id
+            """)
+        elif "COMMENT" in record_id:
+            table_name = 'thread_comment'
+            query = text("SELECT thread_id FROM thread_comment WHERE id = :record_id")
+        elif "THREAD" in record_id:
+            table_name = 'thread'
+            query = text("SELECT id FROM thread WHERE id = :record_id")
+        else:
+            # As a fallback or for IDs without prefixes, you might have a default assumption
+            # or raise an error if the format is unexpected.
+            raise ValueError(f"Could not determine table from record_id format: {record_id}")
+        
+        logger.info(f"Determined table '{table_name}' from record_id. Executing query...")
+        result = db.execute(query, {"record_id": record_id}).scalar_one_or_none()
+        return result
+
+    finally:
+        next(db_gen, None)
+
+
 def process_and_save_postgres_thread(thread_id: str):
     """
     Postgres에서 데이터를 가져와 처리하고 Airtable에 저장/업데이트합니다.
