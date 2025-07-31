@@ -207,14 +207,28 @@ def process_and_save_postgres_thread(thread_id: str):
         'integratedText': integrated_text_obj.model_dump_json(indent=2),
     }
 
-    # 최종 테이블에 저장 또는 업데이트
-    existing_record = table_relevance.first(formula=f"{{threadId}} = '{thread_id}'")
-    if existing_record:
-        logger.info(f"Updating existing Airtable record for threadId: {thread_id}")
-        table_relevance.update(existing_record['id'], data_for_airtable)
-        record_id = existing_record['id']
+    # 최종 테이블에 저장 또는 업데이트 (중복 방지 강화)
+    client_name = thread_record.get('clientName')
+    formula = f"AND({{threadId}} = '{thread_id}', {{clientName}} = '{client_name}')"
+    
+    # 중복 가능성을 고려하여 all()로 모든 레코드 조회
+    existing_records = table_relevance.all(formula=formula)
+
+    if existing_records:
+        # 첫 번째 레코드를 기준으로 사용
+        main_record = existing_records[0]
+        record_id = main_record['id']
+        logger.info(f"Updating existing Airtable record for threadId: {thread_id}, clientName: {client_name}. Record ID: {record_id}")
+        table_relevance.update(record_id, data_for_airtable)
+
+        # 중복된 레코드(두 번째부터)가 있다면 삭제
+        if len(existing_records) > 1:
+            for i in range(1, len(existing_records)):
+                duplicate_record = existing_records[i]
+                logger.warning(f"Deleting duplicate Airtable record: {duplicate_record['id']} for threadId: {thread_id}")
+                table_relevance.delete(duplicate_record['id'])
     else:
-        logger.info(f"Creating new Airtable record for threadId: {thread_id}")
+        logger.info(f"Creating new Airtable record for threadId: {thread_id}, clientName: {client_name}")
         new_record = table_relevance.create(data_for_airtable)
         record_id = new_record['id']
 
