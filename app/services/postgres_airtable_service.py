@@ -64,9 +64,9 @@ def get_thread_data_from_postgres(thread_id: str):
             JOIN
                 community c ON t.community_id = c.id
             LEFT JOIN
-                store_community sc ON c.id = sc.community_id
+                store_thread st ON t.id = st.thread_id
             LEFT JOIN
-                store s ON sc.store_id = s.id
+                store s ON st.store_id = s.id
             WHERE
                 t.id = :thread_id
         """)
