@@ -57,6 +57,7 @@ def get_thread_data_from_postgres(thread_id: str):
                 t.author_at AS "publishedAt",
                 t.thread_url AS link,
                 s.store_name AS "clientName",
+                s.id AS "storeId",
                 c.community_name AS community,
                 c.channel_id AS channel
             FROM
@@ -199,6 +200,7 @@ def process_and_save_postgres_thread(thread_id: str):
     data_for_airtable = {
         'threadId': thread_id,
         'clientName': thread_record.get('clientName'),
+        'storeId': thread_record.get('storeId'),
         'channel': thread_record.get('channel'),
         'community': thread_record.get('community'),
         'title': thread_record.get('title'),
