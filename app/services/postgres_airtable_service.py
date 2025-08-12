@@ -209,6 +209,18 @@ def process_and_save_postgres_thread(thread_id: str):
         'integratedText': integrated_text_obj.model_dump_json(indent=2),
     }
 
+    # NAVER_BLOG 채널은 Airtable 저장을 스킵
+    if thread_record.get('channel') == 'NAVER_BLOG':
+        logger.info(
+            f"Skipping Airtable save for NAVER_BLOG channel. threadId: {thread_id}, clientName: {thread_record.get('clientName')}"
+        )
+        return {
+            'id': thread_id,  # Airtable ID 대신 threadId 반환
+            **data_for_airtable,
+            'integratedText': integrated_text_obj,  # Pydantic 객체로 반환
+            'createdAt': None,
+        }
+
     # 최종 테이블에 저장 또는 업데이트 (중복 방지 강화)
     client_name = thread_record.get('clientName')
     formula = f"AND({{threadId}} = '{thread_id}', {{clientName}} = '{client_name}')"
