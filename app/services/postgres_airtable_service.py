@@ -209,6 +209,9 @@ def process_and_save_postgres_thread(thread_id: str):
         'integratedText': integrated_text_obj.model_dump_json(indent=2),
     }
 
+    # Airtable로 전송할 데이터를 로깅
+    logger.info(f"Data for Airtable (threadId: {thread_id}): {data_for_airtable!r}")
+
     # NAVER_BLOG 채널은 Airtable 저장을 스킵
     if thread_record.get('channel') == 'NAVER_BLOG':
         logger.info(
