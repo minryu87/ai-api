@@ -34,5 +34,8 @@ class Settings(BaseSettings):
     AIRTABLE_NAVER_KEYWORD_TREND_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_KEYWORD_TREND_TABLE_NAME", "inflow-search-trend")
     AIRTABLE_NAVER_POPULAR_CONTENTS_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_POPULAR_CONTENTS_TABLE_NAME", "popular-contents")
 
+    # --- MediContent Settings ---
+    GOOGLE_API_KEY: str = os.environ.get("GOOGLE_API_KEY")
+
 
 settings = Settings()

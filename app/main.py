@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api import site_a, site_b, task_c, sample, health, youtube_videos, youtube_comments, airtable, creator_advisor, naver_creator_advisor, postgres_thread_processor, postgres_webhook
+from app.api import site_a, site_b, task_c, sample, health, youtube_videos, youtube_comments, airtable, creator_advisor, naver_creator_advisor, postgres_thread_processor, postgres_webhook, medicontent
 
 app = FastAPI()
 
@@ -17,3 +17,4 @@ app.include_router(creator_advisor.router, prefix="/api/v1/creator-advisor", tag
 app.include_router(naver_creator_advisor.router, prefix="/api/v1/naver-creator-advisor", tags=["Naver Creator Advisor Crawler"])
 app.include_router(postgres_thread_processor.router, prefix="/api/v1/postgres", tags=["Postgres Processor"])
 app.include_router(postgres_webhook.router, prefix="/api/v1/postgres-webhook", tags=["Postgres Webhook"])
+app.include_router(medicontent.router, prefix="/api/v1/medicontent", tags=["MediContent"])

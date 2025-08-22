@@ -1,5 +1,45 @@
 # ai-api
 
+## 📁 프로젝트 구조
+
+```
+ai-api/
+├── app/
+│   ├── api/                    # API 라우터들
+│   │   ├── medicontent.py      # 메디컨텐츠 API
+│   │   ├── airtable.py         # Airtable API
+│   │   └── ...
+│   ├── services/               # 비즈니스 로직
+│   │   ├── medicontent_service.py  # 메디컨텐츠 서비스
+│   │   └── ...
+│   ├── agents/                 # AI 에이전트들 (멀티에이전트 시스템)
+│   │   ├── input_agent.py      # 입력 데이터 수집/전처리
+│   │   ├── plan_agent.py       # 콘텐츠 계획 수립
+│   │   ├── title_agent.py      # SEO 최적화 제목 생성
+│   │   ├── content_agent.py    # 전문 콘텐츠 생성
+│   │   ├── evaluation_agent.py # SEO/의료법 검토
+│   │   └── run_agents.py       # 에이전트 실행 파이프라인
+│   ├── utils/                  # 유틸리티
+│   │   └── html_converter.py   # HTML 변환기
+│   ├── templates/              # 템플릿 파일들
+│   └── models/                 # 데이터 모델
+├── requirements.txt            # Python 의존성
+├── Dockerfile                  # Docker 설정
+└── README.md                   # 프로젝트 문서
+```
+
+## 🤖 멀티에이전트 시스템
+
+이 프로젝트는 **5개의 AI 에이전트**로 구성된 멀티에이전트 시스템을 포함합니다:
+
+1. **InputAgent** - 병원 데이터 수집 및 전처리
+2. **PlanAgent** - 콘텐츠 구조와 키워드 계획 수립  
+3. **TitleAgent** - SEO 최적화된 제목 생성
+4. **ContentAgent** - 의료법을 준수하는 전문 콘텐츠 작성
+5. **EvaluationAgent** - SEO 점수 및 의료법 준수 여부 검토
+
+각 에이전트는 **CORT (Chain of Thought)** 시스템으로 작동하여 다중 후보를 생성하고 최적 결과를 선택합니다.
+
 ## API 목록
 
 ### 1. Health Check
@@ -176,6 +216,122 @@
   ```json
   {
     "message": "Creator Advisor 데이터 동기화 작업이 백그라운드에서 시작되었습니다."
+  }
+  ```
+
+### 9. 메디컨텐츠 상태 업데이트
+- **이름:** MediContent Post Status Update
+- **주소:** `/api/v1/medicontent/update-post-status`
+- **메서드:** POST
+- **설명:** Medicontent Posts 테이블의 특정 포스트 상태를 업데이트합니다.
+- **Input (Body):**
+  ```json
+  {
+    "postId": "post_recXXXXXX",
+    "status": "병원 작업 중"
+  }
+  ```
+- **Output (Success):**
+  ```json
+  {
+    "status": "success",
+    "message": "상태가 '병원 작업 중'으로 업데이트되었습니다.",
+    "postId": "post_recXXXXXX"
+  }
+  ```
+
+### 10. 메디컨텐츠 자료 요청 저장
+- **이름:** MediContent Data Request Save
+- **주소:** `/api/v1/medicontent/data-requests`
+- **메서드:** POST
+- **설명:** 병원에서 제공한 자료를 Post Data Requests 테이블에 저장합니다.
+- **Input (Body):**
+  ```json
+  {
+    "postId": "post_recXXXXXX",
+    "conceptMessage": "치아 미백으로 자신감 회복",
+    "patientCondition": "치아가 누렇게 변색되어 자신감이 떨어짐",
+    "treatmentProcessMessage": "안전한 레이저 미백 시술",
+    "treatmentResultMessage": "하얀 치아로 자신감 회복",
+    "additionalMessage": "추가 요청사항",
+    "beforeImages": ["before1.jpg"],
+    "processImages": ["process1.jpg"],
+    "afterImages": ["after1.jpg"],
+    "beforeImagesText": "내원 시 치아 상태",
+    "processImagesText": "레이저 미백 시술 과정",
+    "afterImagesText": "시술 후 하얗게 변한 치아"
+  }
+  ```
+- **Output (Success):**
+  ```json
+  {
+    "status": "success",
+    "message": "자료 요청이 성공적으로 저장되었습니다.",
+    "record_id": "recYYYYYYY",
+    "postId": "post_recXXXXXX"
+  }
+  ```
+
+### 11. 메디컨텐츠 완전 생성 워크플로우
+- **이름:** MediContent Complete Generation Workflow
+- **주소:** `/api/v1/medicontent/generate-content-complete`
+- **메서드:** POST
+- **설명:** 병원 자료를 받아 AI 에이전트들이 순차적으로 실행하여 완전한 의료 콘텐츠를 생성하고 Airtable에 저장합니다.
+- **Input (Body):** 10번과 동일한 구조
+- **Output (Success):**
+  ```json
+  {
+    "status": "success",
+    "postId": "post_recXXXXXX",
+    "recordId": "recYYYYYYY",
+    "results": {
+      "title": "치아 미백으로 자신감 회복한 환자 사례",
+      "content": "생성된 전문 의료 콘텐츠...",
+      "plan": {...},
+      "evaluation": {...}
+    },
+    "message": "메디컨텐츠 생성 및 DB 저장 완료!"
+  }
+  ```
+
+### 12. 메디컨텐츠 콘텐츠 평가
+- **이름:** MediContent Content Evaluation
+- **주소:** `/api/v1/medicontent/evaluate-content`
+- **메서드:** POST
+- **설명:** 생성된 콘텐츠의 SEO 및 의료법 준수 여부를 평가합니다.
+- **Input (Body):**
+  ```json
+  {
+    "content": "평가할 콘텐츠",
+    "title": "평가할 제목"
+  }
+  ```
+- **Output (Success):**
+  ```json
+  {
+    "status": "success",
+    "evaluation": "평가 결과",
+    "message": "평가 완료"
+  }
+  ```
+
+### 13. 메디컨텐츠 백그라운드 생성 트리거
+- **이름:** MediContent Background Generation Trigger
+- **주소:** `/api/v1/medicontent/trigger-text-generation`
+- **메서드:** POST
+- **설명:** 텍스트 생성을 백그라운드에서 실행하도록 트리거합니다.
+- **Input (Body):**
+  ```json
+  {
+    "postId": "post_recXXXXXX"
+  }
+  ```
+- **Output (Success):**
+  ```json
+  {
+    "status": "success",
+    "message": "텍스트 생성이 백그라운드에서 시작되었습니다.",
+    "postId": "post_recXXXXXX"
   }
   ```
 

@@ -13,3 +13,19 @@ lxml
 selenium
 webdriver-manager
 uvicorn
+
+# MediContent TextModel 추가 패키지들
+google-generativeai
+google-ai-generativelanguage
+google-api-core
+google-auth
+google-auth-httplib2
+googleapis-common-protos
+grpcio
+grpcio-status
+kiwipiepy
+markdown-it-py
+rich
+rich-toolkit
+typer
+python-multipart
