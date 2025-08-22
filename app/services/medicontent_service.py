@@ -202,9 +202,9 @@ async def generate_content_complete(request):
         # 5단계: AI 에이전트들 import 및 실행 (ai-api 내부 경로)
         try:
             from app.agents.input_agent import InputAgent
-            from app.agents.plan_agent import PlanAgent
-            from app.agents.title_agent import TitleAgent
-            from app.agents.content_agent import ContentAgent
+            from app.agents.plan_agent import main as plan_agent_main
+            from app.agents.title_agent import run as title_agent_run
+            from app.agents.content_agent import run as content_agent_run
         except ImportError as e:
             logger.error(f"AI 에이전트 import 실패: {e}")
             raise Exception("AI 에이전트 모듈을 찾을 수 없습니다. app/agents 폴더를 확인해주세요.")
@@ -215,45 +215,35 @@ async def generate_content_complete(request):
         input_result = input_agent.collect(mode="use")
         
         logger.info("Step 4: PlanAgent 실행...")
-        plan_agent = PlanAgent()
-        plan, plan_candidates, plan_eval_info, _ = plan_agent.generate(
-            input_data=input_result,
-            mode='cli',
-            rounds=2
-        )
+        plan = plan_agent_main(mode='cli', input_data=input_result)
         
         logger.info("Step 5: TitleAgent 실행...")
-        title_agent = TitleAgent()
-        title, title_candidates, title_eval_info, _ = title_agent.generate(
-            input_data=plan,
-            mode='cli',
-            rounds=2
-        )
+        title_result = title_agent_run(plan=plan, mode='cli')
+        title = title_result.get('selected', {}).get('title', '')
         
         logger.info("Step 6: ContentAgent 실행...")
-        content_agent = ContentAgent()
-        content, content_candidates, content_eval_info, _ = content_agent.generate(
-            input_data={**input_result, **plan, 'title': title},
-            mode='use'
-        )
+        content_result = content_agent_run(mode='use', input_data={**input_result, **plan, 'title': title})
+        content = content_result
         
-        # 7단계: 전체 글 생성
-        full_article = content_agent.format_full_article(
-            content, 
-            input_data={**input_result, **plan, 'title': title}
-        )
+        # 7단계: 전체 글 생성 (content_agent의 format_full_article 함수 사용)
+        try:
+            from app.agents.content_agent import format_full_article
+            full_article = format_full_article(content, input_data={**input_result, **plan, 'title': title})
+        except ImportError:
+            # format_full_article 함수가 없으면 content를 그대로 사용
+            full_article = content if isinstance(content, str) else str(content)
         
         logger.info("텍스트 생성 완료!")
         
         # 8단계: 결과를 Post Data Requests에 업데이트 (상태: 완료)
         results = {
-            "title": title.get('title') if isinstance(title, dict) else str(title),
+            "title": title,
             "content": full_article,
             "plan": plan,
             "evaluation": {
-                "plan_evaluation": plan_eval_info,
-                "title_evaluation": title_eval_info,
-                "content_evaluation": content_eval_info
+                "plan_evaluation": "계획 생성 완료",
+                "title_evaluation": "제목 생성 완료", 
+                "content_evaluation": "콘텐츠 생성 완료"
             }
         }
         
