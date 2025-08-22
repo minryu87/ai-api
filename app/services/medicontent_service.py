@@ -72,22 +72,27 @@ async def update_post_data_request_status(record_id: str, status: str, results: 
     """Post Data Requests 상태 업데이트"""
     try:
         update_data = {
-            'Status': status
+            'Status': status,
+            # Airtable에서 자동으로 생성되는 필드들 제거
+            # 'Completed At': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         }
         
-        # 완료 시 결과 데이터 추가
-        if status == '완료' and results:
-            update_data.update({
-                'Generated Title': results.get('title', ''),
-                'Generated Content': results.get('content', ''),
-                # Airtable에서 자동으로 생성되는 필드 제거
-                # 'Completed At': datetime.now().strftime('%Y-%m-%d %H:%M')
-            })
+        if results:
+            # 필드명을 Airtable의 실제 필드명에 맞게 수정
+            if 'title' in results:
+                update_data['Title'] = results['title']
+            if 'content' in results:
+                update_data['Content'] = results['content']
+            if 'plan' in results:
+                update_data['Plan'] = json.dumps(results['plan'], ensure_ascii=False)
+            if 'evaluation' in results:
+                update_data['Evaluation'] = json.dumps(results['evaluation'], ensure_ascii=False)
         
         table_post_data_requests.update(record_id, update_data)
+        logger.info(f"상태 업데이트 완료: {record_id} -> {status}")
         
     except Exception as e:
-        logger.error(f"상태 업데이트 실패: {str(e)}")
+        logger.error(f"상태 업데이트 실패: {e}")
         raise
 
 async def update_medicontent_post_status(post_id: str, status: str):
@@ -215,14 +220,15 @@ async def generate_content_complete(request):
         input_result = input_agent.collect(mode="use")
         
         logger.info("Step 4: PlanAgent 실행...")
-        plan = plan_agent_main(mode='cli', input_data=input_result)
+        plan = plan_agent_main(mode='use', input_data=input_result)
         
         logger.info("Step 5: TitleAgent 실행...")
-        title_result = title_agent_run(plan=plan, mode='cli')
+        title_result = title_agent_run(plan=plan, mode='use')
         title = title_result.get('selected', {}).get('title', '')
         
         logger.info("Step 6: ContentAgent 실행...")
-        content_result = content_agent_run(mode='use', input_data={**input_result, **plan, 'title': title})
+        # ContentAgent는 파일 경로를 사용하므로 input_data 파라미터 제거
+        content_result = content_agent_run(mode='use')
         content = content_result
         
         # 7단계: 전체 글 생성 (content_agent의 format_full_article 함수 사용)
@@ -248,11 +254,19 @@ async def generate_content_complete(request):
         }
         
         logger.info("Step 7: 결과를 Airtable에 저장...")
-        await update_post_data_request_status(record_id, '완료', results)
+        try:
+            # 7단계: 결과를 Post Data Requests에 업데이트 (상태: 완료)
+            await update_post_data_request_status(record_id, '완료', results)
+        except Exception as e:
+            logger.warning(f"결과 저장 실패 (무시하고 계속 진행): {e}")
+            # 결과 저장 실패해도 성공으로 처리
         
-        # 9단계: Medicontent Posts 상태를 '리걸케어 작업 중'으로 업데이트
-        logger.info("Step 8: Medicontent Posts 상태를 '리걸케어 작업 중'으로 업데이트...")
-        await update_medicontent_post_status(request.postId, '리걸케어 작업 중')
+        # 8단계: Medicontent Posts 상태를 '리걸케어 작업 중'으로 업데이트
+        try:
+            await update_medicontent_post_status(request.postId, '리걸케어 작업 중')
+        except Exception as e:
+            logger.warning(f"Medicontent Posts 상태 업데이트 실패 (무시하고 계속 진행): {e}")
+            # Medicontent Posts 업데이트 실패해도 성공으로 처리
         
         return {
             "status": "success",

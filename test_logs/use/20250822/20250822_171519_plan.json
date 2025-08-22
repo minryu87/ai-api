@@ -1,0 +1,146 @@
+{
+  "title_plan": {
+    "guidance": "경기/화성/경기 화성 + 카테고리 + 핵심 키워드",
+    "must_include_one_of": [
+      "경기",
+      "화성",
+      "경기 화성"
+    ],
+    "must_include": [],
+    "must_not_include": [
+      "내이튼치과의원",
+      "가격",
+      "이벤트",
+      "전화번호",
+      "1등",
+      "최고",
+      "완치",
+      "보장"
+    ],
+    "tone": "전문적·친절한 의사 설명",
+    "hints": {
+      "category": "일반진료",
+      "region_examples": [
+        "화성시",
+        "경기 화성",
+        "화성"
+      ]
+    }
+  },
+  "content_plan": {
+    "sections_order": [
+      "1_intro",
+      "2_visit",
+      "3_inspection",
+      "4_doctor_tip",
+      "5_treatment",
+      "6_check_point",
+      "7_conclusion"
+    ],
+    "sections": {
+      "1_intro": {
+        "subtitle": "치아 미백으로 자신감을 되찾는 방법",
+        "summary": "치아 변색으로 고민하시나요?  본 글에서는 치아 미백에 대한 전반적인 정보와 안전한 시술에 대해 알아보겠습니다.  내이튼치과의원은 환자분의 심미적 만족을 위해 최선을 다합니다.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [
+          "",
+          "일반진료"
+        ],
+        "must_not_include": [],
+        "image_binding": []
+      },
+      "2_visit": {
+        "subtitle": "내원 상담 및 문진",
+        "summary": "치과를 방문하시면 우선 환자분의 치아 상태와 미백에 대한 기대치를 충분히 상담합니다.  문진표 작성을 통해 보다 정확한 정보를 얻고, 환자분에게 최적의 치료 계획을 세웁니다.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [
+          "",
+          "경기 화성"
+        ],
+        "must_not_include": [],
+        "image_binding": []
+      },
+      "3_inspection": {
+        "subtitle": "정밀 검사 및 진단",
+        "summary": "치아의 색상, 변색 정도, 치아 및 잇몸의 건강 상태를 정밀하게 검사합니다.  필요에 따라 추가적인 검사를 진행하여 가장 적합한 미백 치료법을 결정합니다.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [
+          ""
+        ],
+        "must_not_include": [],
+        "image_binding": []
+      },
+      "4_doctor_tip": {
+        "subtitle": "치아 미백 시 주의사항",
+        "summary": "치아 미백 시술 전후 주의사항과 관리법에 대해 자세히 설명합니다.  시술 후 불편감 최소화 및 효과 지속을 위한 구강 관리 방법을 안내합니다.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [],
+        "must_not_include": [
+          "가격",
+          "이벤트"
+        ],
+        "image_binding": []
+      },
+      "5_treatment": {
+        "subtitle": "치아 미백 시술 과정",
+        "summary": "레이저 미백 시술 등 다양한 미백 방법을 소개하고, 각 방법의 장단점, 적합한 경우를 설명합니다.  안전하고 효과적인 미백 시술을 위해 노력합니다.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [
+          "",
+          "일반진료"
+        ],
+        "must_not_include": [
+          "가격",
+          "무통증 단정"
+        ],
+        "image_binding": []
+      },
+      "6_check_point": {
+        "subtitle": "시술 후 관리 및 주의사항",
+        "summary": "치아 미백 시술 후 관리 방법과 주의사항을 상세하게 설명합니다.  지속적인 관리를 통해 미백 효과를 유지하는 방법을 알려드립니다.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [
+          "경기 화성"
+        ],
+        "must_not_include": [
+          "과장표현"
+        ],
+        "image_binding": []
+      },
+      "7_conclusion": {
+        "subtitle": "마무리",
+        "summary": "치아 미백을 통해 자신감을 되찾으시길 바랍니다.  궁금한 점은 언제든지 문의해주세요.",
+        "write_instruction": "톤=전문적·친절, 길이=300~500자, 금지어=과장/비교/보장",
+        "must_include": [],
+        "may_include": [],
+        "must_not_include": [
+          "가격",
+          "이벤트",
+          "전화번호 직기재"
+        ],
+        "image_binding": []
+      }
+    }
+  },
+  "context_vars": {
+    "hospital_name": "내이튼치과의원",
+    "save_name": "내이튼치과의원",
+    "city": "경기",
+    "district": "화성",
+    "region_phrase": "경기 화성",
+    "category": "일반진료",
+    "map_link": ""
+  },
+  "meta": {
+    "mode": "use",
+    "timestamp": "20250822_171519",
+    "case_id": "case_내이튼치과의원_20250822_171509",
+    "source_log": "(provided dict)"
+  }
+}
