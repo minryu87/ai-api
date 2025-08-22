@@ -395,13 +395,13 @@ class InputAgent:
         self,
         input_data: Optional[dict] = None,
         case_num: str = "1",
-        test_data_path: str = "test_data/test_input_onlook.json",
-        persona_csv_path: str = "test_data/persona_table.csv",
-        hospital_info_path: str = "test_data/test_hospital_info.json",
-        hospital_image_path: str = "test_data/hospital_image",
-        category_csv_path: str = "test_data/category_data.csv",
-        select_csv_path: str = "test_data/select_data.csv",
-        cache_dir: str = "cache",
+        test_data_path: str = "app/test_data/test_input_onlook.json",
+        persona_csv_path: str = "app/test_data/persona_table.csv",
+        hospital_info_path: str = "app/test_data/test_hospital_info.json",
+        hospital_image_path: str = "app/test_data/hospital_image",
+        category_csv_path: str = "app/test_data/category_data.csv",
+        select_csv_path: str = "app/test_data/select_data.csv",
+        cache_dir: str = "app/cache",
     ):
         self.case_num = case_num
         self.test_data_path = Path(test_data_path)
@@ -696,8 +696,8 @@ class InputAgent:
     def process_uploaded_images(
         self,
         mapping: dict,
-        test_image_dir: Path = Path("test_data/test_image"),
-        hospital_image_dir: Path = Path("test_data/hospital_image"),
+        test_image_dir: Path = Path("app/test_data/test_image"),
+        hospital_image_dir: Path = Path("app/test_data/hospital_image"),
     ) -> None:
         """
         원본: test_data/test_image/원본파일
@@ -806,7 +806,7 @@ class InputAgent:
         if not filename:
             return None
         filename = Path(filename).name
-        search_dirs = search_dirs or [Path("test_data/test_image"), Path("images"), Path(".")]
+        search_dirs = search_dirs or [Path("app/test_data/test_image"), Path("app/images"), Path(".")]
         hits: List[Path] = []
         for root in search_dirs:
             if not Path(root).exists():
@@ -819,7 +819,7 @@ class InputAgent:
         hits.sort(key=lambda p: p.stat().st_mtime, reverse=True)
         return hits[0]
 
-    def _normalize_and_copy_image(self, filename: str, save_name: str, dest_dir: Path = Path("test_data/test_image"), suffix: str = "") -> str:
+    def _normalize_and_copy_image(self, filename: str, save_name: str, dest_dir: Path = Path("app/test_data/test_image"), suffix: str = "") -> str:
         src = self._find_source_image(filename)
         base, ext = os.path.splitext(Path(filename).name)
         safe_base = re.sub(r"[^가-힣A-Za-z0-9_-]+", "_", base).strip("_")
@@ -850,7 +850,7 @@ class InputAgent:
                 print("⚠️ 파일명이 비었습니다. 건너뜁니다.")
                 continue
             normalized_basename = self._normalize_and_copy_image(
-                filename=filename, save_name=save_name, dest_dir=Path("test_data/test_image"), suffix=""
+                filename=filename, save_name=save_name, dest_dir=Path("app/test_data/test_image"), suffix=""
             )
             pairs.append({"filename": normalized_basename, "description": description})
         return pairs
@@ -1073,6 +1073,104 @@ class InputAgent:
         }
         data["clinical_context"] = self._build_clinical_context(data)
         return self._finalize_and_save(data, mode=mode)
+
+    def _fetch_data_from_post_data_requests(self, post_id: str) -> Optional[dict]:
+        """Post Data Requests 테이블에서 postId로 데이터 조회"""
+        try:
+            from pyairtable import Api
+            import os
+            from dotenv import load_dotenv
+            
+            load_dotenv()
+            api = Api(os.getenv('NEXT_PUBLIC_AIRTABLE_API_KEY'))
+            table = api.table(os.getenv('NEXT_PUBLIC_AIRTABLE_BASE_ID'), 'Post Data Requests')
+            
+            # postId로 레코드 검색
+            records = table.all(formula=f"{{Post ID}}='{post_id}'")
+            
+            if not records:
+                print(f"⚠️ Post Data Requests에서 postId '{post_id}'를 찾을 수 없습니다.")
+                return None
+            
+            record = records[0]
+            fields = record['fields']
+            
+            # Airtable 필드를 InputAgent 형식으로 변환
+            data = {
+                "postId": post_id,
+                "hospital": {
+                    "name": fields.get("Hospital Name", ""),
+                    "save_name": fields.get("Hospital Save Name", ""),
+                    "address": fields.get("Hospital Address", ""),
+                    "phone": fields.get("Hospital Phone", ""),
+                    "homepage": fields.get("Hospital Homepage", ""),
+                    "map_link": fields.get("Hospital Map Link", "")
+                },
+                "category": fields.get("Category", ""),
+                "question1_concept": fields.get("Concept Message", ""),
+                "question2_condition": fields.get("Patient Condition", ""),
+                "question4_treatment": fields.get("Treatment Process Message", ""),
+                "question6_result": fields.get("Treatment Result Message", ""),
+                "question8_extra": fields.get("Additional Message", ""),
+                "question3_visit_images": self._parse_image_array(fields.get("Before Images", [])),
+                "question5_therapy_images": self._parse_image_array(fields.get("Process Images", [])),
+                "question7_result_images": self._parse_image_array(fields.get("After Images", [])),
+                "include_tooth_numbers": False,
+                "tooth_numbers": [],
+                "persona_candidates": [],
+                "representative_persona": ""
+            }
+            
+            print(f"✅ Post Data Requests에서 데이터 조회 완료: {post_id}")
+            return data
+            
+        except Exception as e:
+            print(f"❌ Post Data Requests 조회 실패: {str(e)}")
+            return None
+    
+    def _parse_image_array(self, image_array) -> List[Dict[str, str]]:
+        """이미지 배열을 InputAgent 형식으로 변환"""
+        if not image_array:
+            return []
+        
+        result = []
+        for img in image_array:
+            if isinstance(img, str):
+                result.append({"filename": img, "description": ""})
+            elif isinstance(img, dict):
+                result.append({
+                    "filename": img.get("filename", ""),
+                    "description": img.get("description", "")
+                })
+        
+        return result
+    
+    def _get_default_input_data(self, post_id: str) -> dict:
+        """기본 입력 데이터 생성"""
+        return {
+            "postId": post_id,
+            "hospital": {
+                "name": "기본 병원",
+                "save_name": "default_hospital",
+                "address": "",
+                "phone": "",
+                "homepage": "",
+                "map_link": ""
+            },
+            "category": "일반진료",
+            "question1_concept": "",
+            "question2_condition": "",
+            "question4_treatment": "",
+            "question6_result": "",
+            "question8_extra": "",
+            "question3_visit_images": [],
+            "question5_therapy_images": [],
+            "question7_result_images": [],
+            "include_tooth_numbers": False,
+            "tooth_numbers": [],
+            "persona_candidates": [],
+            "representative_persona": ""
+        }
 
 # ------------------------------
 # 엔트리포인트

@@ -30,7 +30,7 @@ import google.generativeai as genai
 # =========================
 # 경로/시간 유틸 & JSON 헬퍼
 # =========================
-TEST_RESULT_PATH = Path("test_data/test_content_result.json")
+TEST_RESULT_PATH = Path("app/test_data/test_content_result.json")
 
 def _today_str() -> str:
     return datetime.now().strftime("%Y%m%d")
@@ -260,13 +260,13 @@ def _latest_title(mode: str) -> Optional[Path]:
 # 프롬프트 로딩/치환
 # =========================
 PROMPTS = {
-    "1_intro":       Path("test_prompt/content1_intro_prompt.txt"),
-    "2_visit":       Path("test_prompt/content2_visit_prompt.txt"),
-    "3_inspection":  Path("test_prompt/content3_inspection_prompt.txt"),
-    "4_doctor_tip":  Path("test_prompt/content4_doctor_tip_prompt.txt"),
-    "5_treatment":   Path("test_prompt/content5_treatment_prompt.txt"),
-    "6_check_point": Path("test_prompt/content6_check_point_prompt.txt"),
-    "7_conclusion":  Path("test_prompt/content7_conclusion_prompt.txt"),
+    "1_intro":       Path("app/test_prompt/content1_intro_prompt.txt"),
+    "2_visit":       Path("app/test_prompt/content2_visit_prompt.txt"),
+    "3_inspection":  Path("app/test_prompt/content3_inspection_prompt.txt"),
+    "4_doctor_tip":  Path("app/test_prompt/content4_doctor_tip_prompt.txt"),
+    "5_treatment":   Path("app/test_prompt/content5_treatment_prompt.txt"),
+    "6_check_point": Path("app/test_prompt/content6_check_point_prompt.txt"),
+    "7_conclusion":  Path("app/test_prompt/content7_conclusion_prompt.txt"),
 }
 
 ### 디버그용 프롬프트 로딩
@@ -347,7 +347,7 @@ def _strip_quotes(s: str) -> str:
 
 # 동물 이미지 GIF
 import random
-GIF_DIR = Path("test_data/test_image/gif")
+GIF_DIR = Path("app/test_data/test_image/gif")
 
 _EMOTICON_MARK_RE = re.compile(r"\((행복|슬픔|신남|화남|일반|마무리)\)")
 # 게시글 단위로 동물 고정 & 풀 캐시
@@ -628,7 +628,7 @@ def _resolve_images_for_section(plan_sec: Dict[str, Any], input_row: Dict[str, A
 
         for it in chosen:
             fn = it.get("filename", "")
-            path = (it.get("path") or f"test_data/test_image/{fn}")
+            path = (it.get("path") or f"app/test_data/test_image/{fn}")
             entry = {
                 "filename": fn,
                 "path": path,
@@ -913,6 +913,21 @@ def run(mode: str = DEF_MODE,
     print(f"🧾 로그 저장: {log_path}")
     print(f"📝 복붙용 TXT 저장: {txt_path}")
     return result
+
+def format_full_article(content, input_data):
+    """전체 글을 포맷팅하는 함수"""
+    if isinstance(content, dict):
+        # content가 딕셔너리인 경우 assembled_markdown 필드 사용
+        if "assembled_markdown" in content:
+            return content["assembled_markdown"]
+        elif "title" in content and "content" in content:
+            return f"{content['title']}\n\n{content['content']}"
+        else:
+            return str(content)
+    elif isinstance(content, str):
+        return content
+    else:
+        return str(content)
 
 
 if __name__ == "__main__":
