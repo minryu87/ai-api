@@ -55,8 +55,9 @@ async def save_to_post_data_requests(data):
             'Before Images Texts': data.beforeImagesText,
             'Process Images Texts': data.processImagesText,
             'After Images Texts': data.afterImagesText,
-            'Created At': current_time.strftime('%Y-%m-%d %H:%M:%S'),
-            'Submitted At': current_time.strftime('%Y-%m-%d %H:%M'),
+            # Airtable에서 자동으로 생성되는 필드들 제거
+            # 'Created At': current_time.strftime('%Y-%m-%d %H:%M:%S'),
+            # 'Submitted At': current_time.strftime('%Y-%m-%d %H:%M'),
             'Status': '대기'
         }
         
@@ -79,7 +80,8 @@ async def update_post_data_request_status(record_id: str, status: str, results: 
             update_data.update({
                 'Generated Title': results.get('title', ''),
                 'Generated Content': results.get('content', ''),
-                'Completed At': datetime.now().strftime('%Y-%m-%d %H:%M')
+                # Airtable에서 자동으로 생성되는 필드 제거
+                # 'Completed At': datetime.now().strftime('%Y-%m-%d %H:%M')
             })
         
         table_post_data_requests.update(record_id, update_data)
@@ -100,7 +102,8 @@ async def update_medicontent_post_status(post_id: str, status: str):
         current_time = datetime.now()
         update_data = {
             'Status': status,
-            'Updated At': current_time.strftime('%Y-%m-%d %H:%M')
+            # Airtable에서 자동으로 생성되는 필드 제거
+            # 'Updated At': current_time.strftime('%Y-%m-%d %H:%M')
         }
         
         table_medicontent_posts.update(record_id, update_data)
