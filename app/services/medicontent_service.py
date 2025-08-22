@@ -19,12 +19,17 @@ logger = logging.getLogger(__name__)
 # 환경변수 로드
 load_dotenv()
 
-# Airtable 설정
-AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY')
-AIRTABLE_BASE_ID = os.getenv('AIRTABLE_BASE_ID')
+# Airtable 설정 (blog_automation Settings 형식)
+AIRTABLE_API_KEY = os.getenv('NEXT_PUBLIC_AIRTABLE_API_KEY')
+AIRTABLE_BASE_ID = os.getenv('NEXT_PUBLIC_AIRTABLE_BASE_ID')
 
 if not AIRTABLE_API_KEY or not AIRTABLE_BASE_ID:
-    raise ValueError('Airtable API 키와 Base ID가 필요합니다.')
+    raise ValueError('NEXT_PUBLIC_AIRTABLE_API_KEY와 NEXT_PUBLIC_AIRTABLE_BASE_ID가 필요합니다.')
+
+# Google API 키 설정 (선택적)
+GOOGLE_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GOOGLE_API_KEY:
+    logger.warning('GEMINI_API_KEY가 설정되지 않았습니다. 메디컨텐츠 생성 기능이 제한될 수 있습니다.')
 
 api = Api(AIRTABLE_API_KEY)
 base = api.base(AIRTABLE_BASE_ID)

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from sqlalchemy.engine.url import URL
 import logging
+from typing import Optional
 
 load_dotenv(override=True) # .env 파일이 시스템 환경 변수를 덮어쓰도록 설정
 
@@ -34,8 +35,12 @@ class Settings(BaseSettings):
     AIRTABLE_NAVER_KEYWORD_TREND_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_KEYWORD_TREND_TABLE_NAME", "inflow-search-trend")
     AIRTABLE_NAVER_POPULAR_CONTENTS_TABLE_NAME: str = os.environ.get("AIRTABLE_NAVER_POPULAR_CONTENTS_TABLE_NAME", "popular-contents")
 
-    # --- MediContent Settings ---
-    GOOGLE_API_KEY: str = os.environ.get("GOOGLE_API_KEY")
+    # --- blog_automation Settings ---
+    NEXT_PUBLIC_AIRTABLE_API_KEY: Optional[str] = os.environ.get("NEXT_PUBLIC_AIRTABLE_API_KEY")
+    NEXT_PUBLIC_AIRTABLE_BASE_ID: Optional[str] = os.environ.get("NEXT_PUBLIC_AIRTABLE_BASE_ID")
+    GEMINI_API_KEY: Optional[str] = os.environ.get("GEMINI_API_KEY")
+    GEMINI_MODEL: Optional[str] = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
+    GEMINI_LITE_MODEL: Optional[str] = os.environ.get("GEMINI_LITE_MODEL", "gemini-2.5-flash-lite")
 
 
 settings = Settings()
