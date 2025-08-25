@@ -98,12 +98,17 @@ async def update_post_data_request_status(record_id: str, status: str, results: 
 async def update_medicontent_post_status(post_id: str, status: str):
     """Medicontent Posts 테이블의 상태 업데이트"""
     try:
-        # Post ID에서 record ID 추출
-        if post_id.startswith('post_'):
-            record_id = post_id[5:]  # post_recXXXXXX → recXXXXXX
-        else:
-            record_id = post_id
+        # Post ID로 레코드를 검색하여 찾기
+        medicontent_records = table_medicontent_posts.all(formula=f"{{Post Id}} = '{post_id}'")
+        
+        if not medicontent_records:
+            logger.warning(f"Post ID '{post_id}'에 해당하는 Medicontent Posts 레코드를 찾을 수 없습니다.")
+            return
             
+        # 첫 번째 매칭되는 레코드 사용
+        record = medicontent_records[0]
+        record_id = record['id']
+        
         current_time = datetime.now()
         update_data = {
             'Status': status,
@@ -112,7 +117,7 @@ async def update_medicontent_post_status(post_id: str, status: str):
         }
         
         table_medicontent_posts.update(record_id, update_data)
-        logger.info(f"Medicontent Posts 상태 업데이트 완료: {record_id} ({post_id}) → {status}")
+        logger.info(f"Medicontent Posts 상태 업데이트 완료: {record_id} (Post ID: {post_id}) → {status}")
         
     except Exception as e:
         logger.error(f"Medicontent Posts 상태 업데이트 실패: {str(e)}")
