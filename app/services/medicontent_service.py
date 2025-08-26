@@ -55,9 +55,6 @@ async def save_to_post_data_requests(data):
             'Before Images Texts': data.beforeImagesText,
             'Process Images Texts': data.processImagesText,
             'After Images Texts': data.afterImagesText,
-            # Airtable에서 자동으로 생성되는 필드들 제거
-            # 'Created At': current_time.strftime('%Y-%m-%d %H:%M:%S'),
-            # 'Submitted At': current_time.strftime('%Y-%m-%d %H:%M'),
             'Status': '대기'
         }
         
